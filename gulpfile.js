@@ -8,17 +8,17 @@ var gulp = require('gulp'),
     sourceFile = ['./src/index.js'];
 
 var browserified = function(standalone) {
-  return transform(function(filename) {
-    var b = browserify();
-    if (standalone) {
-      b.add(filename, {standalone: projectName});
-    } else {
-      b.require(filename, {expose: projectName});
-    }
-    return b.bundle();
-  });
+ return transform(function(filename) {
+   if (standalone) {
+     var b = browserify({standalone: projectName});
+     b.add(filename);
+   } else {
+     var b = browserify();
+     b.require(filename, {expose: projectName});
+   }
+   return b.bundle();
+ });
 }
-
 
 gulp.task('build-browserify', function() {
   gulp.src(sourceFile)
