@@ -1,5 +1,16 @@
 module.exports = wrap;
 
+var inherit = function(ctor, parent){
+  ctor.prototype = Object.create(parent.prototype, {
+    constructor: {
+      value: ctor,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+}
+
 var create = function(type, items){
   // could be simpler new window[type] but this is faster
   switch(type){
@@ -24,19 +35,54 @@ var create = function(type, items){
   }
 }
 
+var STRING_PREFIX_LENGTH = '[object '.length;
+
 var getType = function(it, isView){
   var type = it.type;
   if (isView){
     var temp = it.toString();
-    type = temp.substring('[object '.length, temp.length - 1);
+    type = temp.substring(STRING_PREFIX_LENGTH, temp.length - 1);
   }
 
   return type;
 }
 
-function Iterator(type){
+function Iterator(){}
+
+function MapIterator(type, src, mapper){
   this.type = type;
+  this._src = src;
+  this._mapper = mapper;
 }
+
+function FilterIterator(type, src, predicate){
+  this.type = type;
+  this._src = src;
+  this._predicate = predicate;
+}
+
+inherit(MapIterator, Iterator);
+inherit(FilterIterator, Iterator);
+
+MapIterator.prototype.next = function(){
+  var current = this._src.next();
+
+  if (current.done) {
+    return { done: true };
+  }
+
+  return { done: false, value: this._mapper(current.value) };
+};
+
+FilterIterator.prototype.next = function(){
+  var current = this._src.next();
+
+  while(!current.done && !this._predicate(current.value)){
+    current = this._src.next();
+  }
+
+  return current;
+};
 
 Iterator.prototype.map = function(f){
   return map(this, f);
@@ -64,38 +110,16 @@ var map = function(it, f) {
   var type = getType(it, isView);
   var iterator = isView ? it.values() : it;
 
-  var toReturn = new Iterator(type);
-  toReturn.next = function(){
-    var current = iterator.next();
-
-    if (current.done) {
-      return { done: true };
-    }
-
-    return { done: false, value: f(current.value) };
-  };
-
-  return toReturn;
-}
+  return new MapIterator(type, iterator, f);
+};
 
 var filter = function (it, f) {
   var isView = ArrayBuffer.isView(it);
   var type = getType(it, isView);
   var iterator = isView ? it.values() : it;
 
-  var toReturn = new Iterator(type);
-  toReturn.next = function(){
-    var current = iterator.next();
-
-    while(!current.done && !f(current.value)){
-      current = iterator.next();
-    }
-
-    return current;
-  };
-
-  return toReturn;
-}
+  return new FilterIterator(type, iterator, f);
+};
 
 var reduce = function(it, f, init){
   it = ArrayBuffer.isView(it) ? it.values() : it;
@@ -108,7 +132,7 @@ var reduce = function(it, f, init){
   }
 
   return current;
-}
+};
 
 function wrap(typedArray){
   return {
