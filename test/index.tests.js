@@ -3,7 +3,6 @@
 var wrap = require('../src/index.js');
 
 describe('map', function(){
-
   it('should apply function to each element when called', function() {
     var elements = new Uint16Array([1,2,3]);
     var mapped = wrap(elements).map(function(e) { return e * 2 }).col();
@@ -15,7 +14,8 @@ describe('map', function(){
   });
 
   ['Int8Array', 'Uint8Array', 'Uint8ClampedArray',
-     'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array'].forEach(function(type){
+     'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array',
+     'Float32Array', 'Float64Array'].forEach(function(type){
       it('should use ' + type + 'array type for mapped array if original is ' + type, function() {
         var elements = new global[type]([1,2,3]);
         var mapped = wrap(elements).map(function(e) { return e * 2 }).col();
@@ -60,7 +60,8 @@ describe('filter', function(){
   });
 
   ['Int8Array', 'Uint8Array', 'Uint8ClampedArray',
-     'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array'].forEach(function(type){
+     'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array',
+     'Float32Array', 'Float64Array'].forEach(function(type){
       it('should use ' + type + 'array type for filtered array if original is ' + type, function() {
         var elements = new global[type]([1,2,3,4]);
         var filtered = wrap(elements).filter(function(e) { return e % 2 === 0 }).col();

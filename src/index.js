@@ -17,6 +17,10 @@ var create = function(type, items){
       return new Int16Array(items);
     case 'Int32Array':
       return new Int32Array(items);
+    case 'Float32Array':
+      return new Float32Array(items);
+    case 'Float64Array':
+      return new Float64Array(items);
   }
 }
 
